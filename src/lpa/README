@@ -1,0 +1,10 @@
+This directory contains an alternative approach to flattening based
+on the Chakravary & Keller paper
+
+	More types for nested data parallel programming (ICFP 2000)
+
+and Roman Leshchinskiy's PhD dissertation
+
+	Higher-order nested data parallelism: semantics and
+	implementation
+

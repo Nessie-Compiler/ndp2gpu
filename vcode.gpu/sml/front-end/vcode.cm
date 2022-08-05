@@ -1,0 +1,29 @@
+(* minml.cm
+ *
+ * COPYRIGHT (c) 2007 John Reppy (http://www.cs.uchicago.edu/~jhr)
+ * All rights reserved.
+ *
+ * CMSC 22610 Sample code (Winter 2007)
+ *
+ * The Project-3 CM file.
+ *)
+
+Library
+  structure ParseTree
+  structure Parser
+  structure VCodeLex
+  structure Error
+
+is
+  $/basis.cm
+  $/smlnj-lib.cm
+  $/pp-lib.cm
+  $/ml-lpt-lib.cm
+
+  error.sml
+  parse-tree.sml
+  parser.sml
+(*  print-pt.sml *)
+  vcode.lex : ml-ulex
+  vcode.grm : ml-antlr
+

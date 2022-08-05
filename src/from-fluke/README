@@ -1,0 +1,5 @@
+flattening of nested data parallelism based on the paper
+
+	"A calculational approach to flattening nested data parallelism in
+	functional languages", by Keller and Simons.
+

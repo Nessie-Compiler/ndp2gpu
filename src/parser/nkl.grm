@@ -1,0 +1,164 @@
+(* nkl.grm
+ *
+ * An ML-Antlr grammar for Keller's NKL language.
+ *)
+
+%name NKL;
+
+%tokens : KW_bool	("bool")
+	| KW_else	("else")
+	| KW_end	("end")
+	| KW_false	("false")
+	| KW_float	("float")
+	| KW_fun	("fun")
+	| KW_datatype	("datatype")
+        | KW_if		("if")
+        | KW_in		("in")
+	| KW_int	("int")
+        | KW_let	("let")
+        | KW_then	("then")
+	| KW_true	("true")
+	| EQ		("=")
+	| COMMA		(",")
+	| COLON		(":")
+	| LP		("(")
+	| RP		(")")
+	| LB		("[")
+	| RB		("]")
+	| LCB		("{")
+	| RCB		("}")
+	| PLUS		("+")
+	| MINUS		("-")
+	| STAR		("*")
+	| SLASH		("/")
+	| CONCAT	("++")
+	| BANG		("!")
+	| DOT		(".")
+	| LT		("<")
+	| LTE		("<=")
+	| GT		(">")
+	| GTE		(">=")
+	| EQEQ		("==")
+	| HASH		("#")
+	| ID of Atom.atom
+	| INT of IntInf.int
+	| FLT of string
+	;
+
+%defs(
+  structure P = Prim
+  structure PT = ParseTree
+
+  fun list NONE = []
+    | list (SOME(x, xs)) = x::xs
+
+  fun mkLet ([], e) = e
+    | mkLet ((x, e)::r, e') = PT.Let(x, e, mkLet(r, e'))
+
+(* build an application for an infix binary operator *)
+  fun mkBinApp (e1, rator, e2) =
+        PT.Op(rator, [e1, e2])
+
+(* construct application expressions for left-associative binary operators *)
+  fun mkLBinExp (e, []) = e
+    | mkLBinExp (e, (id, e')::r) = mkLBinExp (mkBinApp(e, id, e'), r)
+
+(* construct application expressions for right-associative binary operators *)
+  fun mkRBinExp (e, []) = e
+    | mkRBinExp (e, [(id, e')]) = mkBinApp(e, id, e')
+    | mkRBinExp (e, (id, e')::r) = mkBinApp(e, id, mkRBinExp(e', r))
+
+(* construct application expressions for postfix operators *)
+  fun mkPostfixExp (e, []) = e
+    | mkPostfixExp (e, (id, SOME e')::r) = mkPostfixExp(mkBinApp(e, id, e'), r)
+    | mkPostfixExp (e, (id, NONE)::r) = mkPostfixExp(PT.Prim(id, [e]), r)
+);
+
+Program
+	: Data* Fun* "in" Exp "end"
+		=> (PT.Prog(Fun, Exp))
+	;
+
+Data	: "datatype" ID "(" Type ("," Type)+ ")"
+	  	=> (PT.Data(ID, Type::SR))
+	;
+
+Fun	: "fun" Var Args "=" Exp
+		=> (PT.Fun(Var, Args, Exp))
+	;
+
+Args	: "(" ( Arg ("," Arg)* )? ")"
+		=> (list SR)
+	;
+
+Arg	: Var ":" Type			=> (Var, Type)
+	;
+
+Type	: "bool"			=> (Ty.BaseTy Ty.BoolTy)
+	| "int"				=> (Ty.BaseTy Ty.IntTy)
+	| "float"			=> (Ty.BaseTy Ty.FloatTy)
+	| "(" Type ("," Type)* ")"	=> (Ty.TupleTy(Type :: SR))
+	| "[" Type "]"			=> (Ty.ArrayTy Type)
+	| "<" Type ">"			=> (Ty.MaybeTy Type)
+	;
+
+Exp	: ("let" Arg "=" Exp)+ "in" Exp "end"
+		=> (mkLet(SR, Exp))
+	| "if" Exp "then" Exp "else" Exp
+		=> (PT.If(Exp1, Exp2, Exp3))
+	| RelExp
+		=> (RelExp)
+	;
+
+RelExp	: AddExp (("<" => (PT.<) | "<=" => (PT.<=) | "==" => (PT.==) | ">=" => (PT.>=) | ">" => (PT.>)) AddExp)*
+		=> (mkLBinExp (AddExp, SR))
+	;
+
+AddExp	: MulExp (("+" => (PT.+) | "-" => (PT.-) | "++" => (PT.++)) MulExp)*
+		=> (mkLBinExp (MulExp, SR))
+	;
+
+MulExp	: PrefixExp (("*" => (PT.* ) | "/" => (PT./)) PrefixExp)*
+		=> (mkLBinExp (PrefixExp, SR))
+	;
+
+PrefixExp
+	: "#" PrefixExp
+		=> (PT.Prim(PT.##, [PrefixExp]))
+	| PostfixExp
+		=> (PostfixExp)
+	;
+
+PostfixExp
+	: AtomicExp ("!" AtomicExp => (PT.!, SOME AtomicExp) | "." INT => (PT.SEL(IntInf.toInt INT), NONE))*
+		=> (mkPostfixExp (AtomicExp, SR))
+	;
+
+AtomicExp
+	: Var "(" (Exp ("," Exp)* )? ")"
+		=> (PT.App(Var, list SR))
+	| "(" (Exp ("," Exp)* )? ")"
+		=> (PT.Tuple(list SR))
+	| "[" (Exp ("," Exp)* )? "]" 
+		=> (PT.PArray(list SR))
+	| "{" Exp ":" Binding ("," Binding)* (":" Exp)? "}"
+		=> (PT.ForEach(Exp, Binding :: SR1, SR2))
+	| Const
+		=> (PT.Const Const)
+	| Var
+		=> (PT.Var Var)
+	;
+
+Binding	: Var "in" Exp
+		=> (PT.Gen(Var, Exp))
+	;
+
+Const	: "false"	=> (Literal.Bool false)
+	| "true"	=> (Literal.Bool true)
+	| INT		=> (Literal.Int INT)
+	| FLT		=> (Literal.Flt FLT)
+	;
+
+Var	: ID => (ID)
+	;
+

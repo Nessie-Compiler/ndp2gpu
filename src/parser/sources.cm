@@ -1,0 +1,23 @@
+Library
+
+    structure Error
+    structure NKL
+    structure Parser
+
+is
+
+    $/basis.cm
+    $/smlnj-lib.cm
+    $/ml-lpt-lib.cm
+
+    ../common/sources.cm
+    ../nkl/sources.cm
+
+    nkl.lex : ml-ulex
+    nkl.grm : ml-antlr
+
+    error.sml
+    normalize.sml
+    parse-tree.sml
+    parser.sml
+

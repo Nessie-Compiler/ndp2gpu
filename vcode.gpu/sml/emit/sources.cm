@@ -1,0 +1,12 @@
+Library
+  structure EmitPT
+
+is
+  $/basis.cm
+  $/smlnj-lib.cm
+  $/pp-lib.cm
+
+  ../front-end/vcode.cm
+
+  emit-pt.sml
+

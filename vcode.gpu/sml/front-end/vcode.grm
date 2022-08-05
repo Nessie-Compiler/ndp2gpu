@@ -1,0 +1,337 @@
+(* vcode.grm
+ *
+ *)
+
+%name VCode;
+
+%tokens
+    (* Elementwise operations *)
+    : PLUS ("+")
+    | MINUS ("-")
+    | TIMES ("*")
+    | DIV ("/")
+    | MOD ("%")
+    | LT ("<")
+    | LEQ ("<=")
+    | GT (">")
+    | GEQ (">=")
+    | EQ ("=")
+    | NEQ ("!=")
+    | LSHIFT ("LSHIFT")
+    | RSHIFT ("RSHIFT")
+    | NOT ("NOT")
+    | AND ("AND")
+    | OR ("OR")
+    | XOR ("XOR")
+    | SELECT ("SELECT")
+    | RAND ("RAND")
+    | FLOOR ("FLOOR")
+    | CEIL ("CEIL")
+    | TRUNC ("TRUNC")
+    | ROUND ("ROUND")
+    | LOG ("LOG")
+    | SQRT ("SQRT")
+    | EXP ("EXP")
+    | SIN ("SIN")
+    | COS ("COS")
+    | TAN ("TAN")
+    | ASIN ("ASIN")
+    | ACOS ("ACOS")
+    | ATAN ("ATAN")
+    | SINH ("SINH")
+    | COSH ("COSH")
+    | TANH ("TANH")
+    | I_TO_F ("I_TO_F")
+    | I_TO_B ("I_TO_B")
+    | B_TO_I ("B_TO_I")
+
+(* Vector operations *)
+    | PLUS_SCAN ("+_SCAN")
+    | MULT_SCAN ("*_SCAN")
+    | MAX_SCAN ("MAX_SCAN")
+    | MIN_SCAN ("MIN_SCAN")
+    | AND_SCAN ("AND_SCAN")
+    | OR_SCAN ("OR_SCAN")
+    | XOR_SCAN ("XOR_SCAN")
+    | PLUS_REDUCE ("+_REDUCE")
+    | MULT_REDUCE ("*_REDUCE")
+    | MAX_REDUCE ("MAX_REDUCE")
+    | MIN_REDUCE ("MIN_REDUCE")
+    | AND_REDUCE ("AND_REDUCE")
+    | OR_REDUCE ("OR_REDUCE")
+    | XOR_REDUCE ("XOR_REDUCE")
+    | PERMUTE ("PERMUTE")
+    | DPERMUTE ("DPERMUTE")
+    | FPERMUTE ("FPERMUTE")
+    | BPERMUTE ("BPERMUTE")
+    | BFPERMUTE ("BFPERMUTE")
+    | DFPERMUTE ("DFPERMUTE")
+    | EXTRACT ("EXTRACT")
+    | REPLACE ("REPLACE")
+    | DIST ("DIST")
+    | INDEX ("INDEX")
+    | RANK_UP ("RANK_UP")
+    | RANK_DOWN ("RANK_DOWN")
+    | PACK ("PACK")
+
+(* Segment descriptor operations *)
+    | LENGTH ("LENGTH")
+    | MAKE_SEGDES ("MAKE_SEGDES")
+    | LENGTHS ("LENGTHS")
+
+(* Control operations *)
+    | COPY ("COPY")
+    | POP ("POP")
+    | CPOP ("CPOP")
+    | PAIR ("PAIR")
+    | UNPAIR ("UNPAIR")
+    | CALL ("CALL")
+    | RET ("RET")
+    | FUNC ("FUNC")
+    | IF ("IF")
+    | ELSE ("ELSE")
+    | ENDIF ("ENDIF")
+    | CONST ("CONST")
+    | EXIT ("EXIT")
+
+(* timing ops *)
+    | START_TIMER ("START_TIMER")
+    | STOP_TIMER ("STOP_TIMER")
+
+(* I/O operations *)
+ 
+    | READ ("READ")
+    | WRITE ("WRITE")
+    | FOPEN ("FOPEN")
+    | FCLOSE ("FCLOSE")
+    | FREAD ("FREAD")
+    | FREAD_CHAR ("FREAD_CHAR")
+    | FWRITE ("FWRITE")
+    | SPAWN ("SPAWN")
+
+(* Seed random number generator *)
+    | SRAND ("SRAND")
+
+(* Types *)
+    | INT ("INT")
+    | BOOL ("BOOL")
+    | FLOAT ("FLOAT")
+    | SEGDES ("SEGDES")
+    | CHAR ("CHAR")
+
+(* Constants *)
+    | V_TRUE ("T")
+    | V_FALSE ("F")
+    | NULL_STREAM ("NULL_STREAM")
+    | STDIN ("STDIN")
+    | STDOUT ("STDOUT")
+    | STDERR ("STDERR")
+
+(* Main *)
+    | MAIN of Atom.atom
+
+(* Miscellaneous *)
+ 
+    | BEGIN_VECTOR 
+    | END_VECTOR
+    | INTEGER of IntInf.int
+    | REAL of Real.real
+    | STRING of string
+    | NAME of Atom.atom  (* identifiers *)
+    | INPUT_INFO 
+    | OUTPUT_INFO
+    ;
+
+%defs (
+  structure PT = ParseTree
+);
+
+(* Beginning of rules section *)
+
+program	:	fn_def+ => (fn_def)
+	;
+
+fn_def	:	fn_name fn_types stmts fn_end => (PT.Function (fn_name, fn_types, stmts))
+	;
+
+fn_name	:	FUNC NAME => (NAME)
+                                       (* Undone - first function, store as 'main' *)
+	|	FUNC MAIN => (Atom.atom("MAIN"))
+                                 (* undone - store as main if main has not been seen *)
+	;
+
+fn_types :	(* empty *) => (PT.Untyped)
+	|	INPUT_INFO type_decls
+		OUTPUT_INFO type_decls => (PT.InputOutput(type_decls1, type_decls2))
+	;
+
+type_decls :	type_decl* => (type_decl) 
+	;
+
+type_decl :     types_5 => (types_5)
+        ;
+
+fn_end 	:	RET
+	;
+
+stmts   :	stmt* => (stmt)
+	;
+
+stmt	:	elt_op => (elt_op)
+	|	vec_op => (vec_op)
+	|	seg_op => (seg_op)
+	|	ctl_op => (ctl_op)
+	|	io_op => (io_op) 
+	;
+
+elt_op	:	PLUS types_1 => (PT.AddVector(types_1))
+	|	MINUS types_1 => (PT.SubtractVector(types_1))
+	|	TIMES types_1 => (PT.MultiplyVector(types_1))
+	|	DIV types_1 => (PT.DivideVector(types_1))
+	|	MOD => (PT.ModuloVector)
+	|	LT types_1 => (PT.LessThanVector(types_1))
+	|	LEQ types_1 => (PT.LessThanEqualVector(types_1))
+	|	GT types_1 => (PT.GreaterThanVector(types_1))
+	|	GEQ types_1 => (PT.GreaterThanEqualVector(types_1))
+	|	EQ types_1 => (PT.EqualVector(types_1))
+	|	NEQ types_1 => (PT.NotEqualVector(types_1))
+	|	LSHIFT => (PT.LShiftVector)
+	|	RSHIFT => (PT.RShiftVector)
+	|	NOT types_2 => (PT.NotVector(types_2))
+	|	AND types_2 => (PT.AndVector(types_2))
+	|	OR types_2 => (PT.OrVector(types_2))
+	|	XOR types_2 => (PT.XorVector(types_2))
+	|	SELECT types_3 => (PT.SelectVector(types_3))
+	|	RAND => (PT.RandVector)
+	|	FLOOR => (PT.FloorVector)
+	|	CEIL => (PT.CeilVector)
+	|	TRUNC => (PT.TruncVector)
+	|	ROUND => (PT.RoundVector)
+	|	LOG => (PT.LogVector)
+	|	SQRT => (PT.SqrtVector)
+	|	EXP => (PT.ExpVector)
+	|	SIN => (PT.SinVector)
+	|	COS => (PT.CosVector)
+	|	TAN => (PT.TanVector)
+	|	ASIN => (PT.ASinVector)
+	|	ACOS => (PT.ACosVector)
+	|	ATAN => (PT.ATanVector)
+	|	SINH => (PT.SinHVector)
+	|	COSH => (PT.CosHVector)
+	|	TANH => (PT.TanHVector)
+	|	I_TO_F => (PT.IntToFloatVector)
+	|	I_TO_B => (PT.IntToBoolVector)
+	|	B_TO_I => (PT.BoolToIntVector)
+	;
+
+
+vec_op	:	PLUS_SCAN types_1 => (PT.PlusScan(types_1))
+	|	MULT_SCAN types_1 => (PT.MultScan(types_1))
+	|	MAX_SCAN types_1 => (PT.MaxScan(types_1))
+	|	MIN_SCAN types_1 => (PT.MinScan(types_1))
+	|	AND_SCAN types_2 => (PT.AndScan(types_2))
+	|	OR_SCAN types_2 => (PT.OrScan(types_2))
+	|	XOR_SCAN types_2 => (PT.XorScan(types_2))
+	|	PLUS_REDUCE types_1 => (PT.PlusReduce(types_1))
+	|	MULT_REDUCE types_1 => (PT.MultReduce(types_1))
+	|	MAX_REDUCE types_1 => (PT.MaxReduce(types_1))
+	|	MIN_REDUCE types_1 => (PT.MinReduce(types_1))
+	|	AND_REDUCE types_2 => (PT.AndReduce(types_2))
+	|	OR_REDUCE types_2 => (PT.OrReduce(types_2))
+	|	XOR_REDUCE types_2 => (PT.XorReduce(types_2))
+	|	PERMUTE types_3 => (PT.Permute(types_3))
+	|	DPERMUTE types_3 => (PT.DPermute(types_3))
+	|	FPERMUTE types_3 => (PT.FPermute(types_3))
+	|	BPERMUTE types_3 => (PT.BPermute(types_3))
+	|	BFPERMUTE types_3 => (PT.BFPermute(types_3))
+	|	DFPERMUTE types_3 => (PT.DFPermute(types_3))
+	|	DIST types_3 => (PT.Dist(types_3))
+	|	INDEX => (PT.Index)
+	|	LENGTH types_3 => (PT.Length(types_3))
+	|	EXTRACT types_3 => (PT.Extract(types_3))
+	|	REPLACE types_3 => (PT.Replace(types_3))
+	|	RANK_UP types_1 => (PT.RankUp(types_1))
+	|	RANK_DOWN types_1 => (PT.RankDown(types_1))
+	|	PACK types_3 => (PT.Pack(types_3))
+	;
+
+seg_op	:	MAKE_SEGDES => (PT.MakeSegdes)
+	|	LENGTHS => (PT.Lengths)
+	;
+
+ctl_op	:	COPY int_con int_con => (PT.Copy(int_con1, int_con2))
+	|	POP int_con int_con => (PT.Pop(int_con1, int_con2))
+	|	CPOP int_con int_con => (PT.CPop(int_con1, int_con2))
+	|	PAIR => (PT.Pair)
+	|	UNPAIR => (PT.Unpair)
+	|	CALL NAME => (PT.Call(NAME))
+	|	CALL MAIN => (PT.Call(MAIN))
+	|	IF stmts ELSE stmts ENDIF => (PT.If(stmts1, stmts2))
+	|	EXIT => (PT.Exit)
+	| 	CONST INT INTEGER => (PT.ConstInt(INTEGER))
+	|	CONST INT file_con => (PT.ConstFD(file_con))
+	| 	CONST FLOAT REAL => (PT.ConstFloat(REAL))
+	| 	CONST BOOL bool_con => (PT.ConstBool(bool_con))
+	|	CONST SEGDES INTEGER => (PT.ConstSegdes(INTEGER))
+	|	CONST INT BEGIN_VECTOR int_vals END_VECTOR => (PT.IntVector(int_vals))
+	|	CONST BOOL BEGIN_VECTOR bool_vals END_VECTOR => (PT.BoolVector(bool_vals))
+	|	CONST FLOAT BEGIN_VECTOR float_vals END_VECTOR => (PT.FloatVector(float_vals))
+	|	CONST SEGDES BEGIN_VECTOR int_vals END_VECTOR => (PT.SegdesVector(int_vals))
+	|	CONST CHAR STRING => (PT.StringVector(String.substring (STRING,
+                                                     1, (String.size STRING)-2)))
+	;
+
+float_vals : REAL* => (REAL)
+        ;
+
+int_vals : int_con* => (int_con)
+        ;
+
+bool_vals : bool_con* => (bool_con)
+        ;
+
+io_op	:	START_TIMER => (PT.StartTimer)
+	|	STOP_TIMER => (PT.StopTimer)
+	|	READ types_5 => (PT.Read(types_5))
+	|	WRITE types_5 => (PT.Write(types_5))
+	|	FOPEN => (PT.FOpen)
+	|	FCLOSE => (PT.FClose)
+	|	FREAD types_5 => (PT.FRead(types_5))
+	|	FREAD_CHAR => (PT.FReadChar)
+	|	FWRITE types_5 => (PT.FWrite(types_5))
+	|	SPAWN => (PT.Spawn)
+	|	SRAND INT => (PT.SRand) (* This may be wrong - INTEGER? *)
+	;
+
+bool_con:	V_TRUE => (Bool.true)
+	|	V_FALSE => (Bool.false)
+	;
+
+int_con :	INTEGER => (INTEGER)
+	;
+
+file_con:	STDIN => (PT.StdIn)
+	|	STDOUT => (PT.StdOut)
+	|	STDERR => (PT.StdErr)
+	|	NULL_STREAM => (PT.NullStream)
+	;
+
+types_1	:	INT => (PT.IFInt)
+	|	FLOAT => (PT.IFFloat)
+	;
+
+types_2	:	INT => (PT.IBInt)
+	|	BOOL => (PT.IBBool)
+	;
+
+types_3	:	INT => (PT.IBFInt)
+	|	BOOL => (PT.IBFBool)
+	|	FLOAT => (PT.IBFFloat)
+	;
+
+types_5	:	INT => (PT.BTInteger)
+	|	BOOL => (PT.BTBool)
+	|	FLOAT => (PT.BTFloat)
+	|	SEGDES => (PT.BTSegDes) 
+	|	CHAR => (PT.BTChar)
+	;

@@ -1,0 +1,13 @@
+Library
+
+    structure NKL
+
+is
+
+    $/basis.cm
+    $/smlnj-lib.cm
+
+    ../common/sources.cm
+
+    nkl.sml
+

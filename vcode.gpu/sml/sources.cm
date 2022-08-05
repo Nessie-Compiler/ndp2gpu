@@ -1,0 +1,14 @@
+Library
+
+  structure Main
+
+is
+
+  $/basis.cm
+  $/smlnj-lib.cm
+
+  front-end/vcode.cm
+  emit/sources.cm
+
+  main.sml
+

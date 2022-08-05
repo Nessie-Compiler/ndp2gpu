@@ -1,0 +1,17 @@
+Library
+
+    structure Literal
+    structure Prim
+    structure Ty
+    structure Var
+
+is
+
+    $/basis.cm
+    $/smlnj-lib.cm
+
+    literal.sml
+    prim.sml
+    ty.sml
+    var.sml
+

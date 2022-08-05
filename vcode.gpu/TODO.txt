@@ -1,0 +1,19 @@
+Notes:
+Main.main ("asdf", ["/Users/larsberg/ndp2gpu/vcode.gpu/examples/smallnesting.vcode"]);
+CM.make "sources.cm";
+
+Code generation:
+Need to free memory I'm no longer using
+
+NOTES:
+Need to solve the "where do I keep the .cl files?" issue
+
+Commands:
+
+Framework:
+int *VectorMultiplyInts(int *first, int *second);
+int *VectorAddInts(int *first, int *second);
+int *DistributeIntegers(int *values, int *segdes);
+int *Index(int *values, int *strides, int *segdes);
+int *Lengths(int *segdes);
+int *MakeSegDes(int *values);

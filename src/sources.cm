@@ -1,0 +1,17 @@
+Group
+
+is
+
+  $/basis.cm
+  $/smlnj-lib.cm
+  $/pp-lib.cm
+
+  common/sources.cm
+  nkl/sources.cm
+  parser/sources.cm
+
+  fkl/fkl.sml
+  flatten/flatten.sml
+  flatten/fkl-opt.sml
+  main.sml
+

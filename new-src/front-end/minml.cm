@@ -1,0 +1,51 @@
+(* minml.cm
+ *
+ * COPYRIGHT (c) 2007 John Reppy (http://www.cs.uchicago.edu/~jhr)
+ * All rights reserved.
+ *
+ * CMSC 22610 Sample code (Winter 2007)
+ *
+ * The Project-3 CM file.
+ *)
+
+Library
+
+  structure AST
+  structure DataCon
+  structure Error
+  structure FrontEnd
+  structure Literal
+  structure PPAST
+  structure TyCon
+  structure TyVar
+  structure TypeUtil
+  structure Var
+
+is
+  $/basis.cm
+  $/smlnj-lib.cm
+  $/pp-lib.cm
+  $/ml-lpt-lib.cm
+
+  ast.sml
+  basis.sml
+  basis-names.sml
+  data-con.sml
+  env.sml
+  error.sml
+  front-end.sml
+  literal.sml
+  meta-var.sml
+  minml.lex : ml-ulex
+  minml.grm : ml-antlr
+  parse-tree.sml
+  parser.sml
+  pp-ast.sml
+  stamp.sml
+  typechecker.sml
+  ty-con.sml
+  ty-var.sml
+  type-util.sml
+  unify.sml
+  var.sml
+

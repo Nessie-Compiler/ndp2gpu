@@ -1,0 +1,42 @@
+This is the sample code for Project-3.  It includes a sample parser built using
+ml-ulex and ml-antlr.  If you want to use your own parser from part 2, you should
+replace this code with your own.
+
+NOTE: this code requires SML/NJ 110.62 to compile!!!
+
+	README			- This file.
+
+	ast.sml			- The abstract syntax tree produced by the typechecker
+
+	basis-names.sml		- names of identifiers and operators defined in the Basis
+
+	error.sml		- Some global variables for the parser.
+
+	main.sml		- Main module
+
+	minml.cm		- The CM file for the ml-ulex + ml-antlr combination.
+
+	minml.grm		- ml-antlr specification for MinML
+
+	minml.lex		- ml-ulex specification for MinML
+
+	parse-tree.sml		- The parse-tree datatype.
+
+	parser.cm		- CM file for parser component
+
+	parser.sml		- main parser function
+
+	print-pt.sml		- parse-tree pretty printer
+
+	stamp.sml		- generator of unique stamps.
+
+	ty-con.sml		- type constructor utility functions.
+
+	ty-var.sml		- type variable utility functions.
+
+	type-util.sml		- type utility functions.
+
+	typechecker.sml		- stub module for typechecker
+
+	unify.sml		- implementation of destructive unification for types.
+
